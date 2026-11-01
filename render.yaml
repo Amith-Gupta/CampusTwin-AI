@@ -17,3 +17,4 @@ services:
         value: https://amith-gupta.github.io,http://localhost:5173
       - key: PYTHON_VERSION
         value: 3.10.11
+
