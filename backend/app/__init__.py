@@ -17,13 +17,14 @@ def create_app(config_class=Config):
         handlers=[logging.StreamHandler(sys.stdout)]
     )
 
-    # Enable CORS for frontend Vite dev server and production clients
+    # Enable CORS for frontend Vite dev server, Vercel, and GitHub Pages
+    cors_origins = getattr(config_class, "CORS_ORIGINS", ["*"]) or ["*"]
     CORS(
         app,
-        resources={r"/api/*": {"origins": "*"}},
-        supports_credentials=True,
+        resources={r"/*": {"origins": cors_origins}},
         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allow_headers=["Content-Type", "Authorization"]
+        allow_headers=["Content-Type", "Authorization"],
+        expose_headers=["Content-Type", "Authorization"]
     )
 
     # Initialize Database

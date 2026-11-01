@@ -33,3 +33,4 @@ if __name__ == "__main__":
     port = int(os.getenv("PORT", Config.PORT))
     print(f"[*] CampusTwin AI WSGI starting on port {port}")
     app.run(host="0.0.0.0", port=port, debug=Config.DEBUG)
+

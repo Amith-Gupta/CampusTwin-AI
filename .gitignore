@@ -17,6 +17,12 @@ backend/uploads/
 backend/*.db
 backend/*.part
 
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+*.env
+
 # OS / Editor
 .DS_Store
 Thumbs.db
