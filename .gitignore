@@ -1,0 +1,24 @@
+# Node / Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+*.log
+
+# Python / Backend
+backend/venv/
+backend/__pycache__/
+backend/*/__pycache__/
+backend/*/*/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+backend/uploads/
+backend/*.db
+backend/*.part
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
