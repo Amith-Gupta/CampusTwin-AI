@@ -6,6 +6,7 @@ services:
     plan: free
     branch: master
     rootDir: backend
+    healthCheckPath: /api/health
     buildCommand: pip install --upgrade pip && pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu && pip install --no-cache-dir -r requirements.txt
     startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 120 "wsgi:app"
     envVars:

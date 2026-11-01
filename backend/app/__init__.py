@@ -55,6 +55,12 @@ def create_app(config_class=Config):
     app.register_blueprint(alerts_bp, url_prefix="/api")
     app.register_blueprint(seed_bp, url_prefix="/api")
 
+    # Direct /health root route in addition to /api/health
+    @app.route("/health")
+    def health_root():
+        from app.routes.health import health_check
+        return health_check()
+
     # Root route for direct browser visits to backend
     @app.route("/")
     def index():

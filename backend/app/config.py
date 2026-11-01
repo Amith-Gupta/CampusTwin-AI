@@ -44,7 +44,10 @@ class Config:
     # CORS Allowed Origins
     CORS_ORIGINS = [
         origin.strip()
-        for origin in os.getenv("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",")
+        for origin in os.getenv(
+            "CORS_ORIGINS",
+            "http://localhost:5173,http://127.0.0.1:5173,https://frontend-pied-ten-13.vercel.app,https://amith-gupta.github.io"
+        ).split(",")
         if origin.strip()
     ]
 

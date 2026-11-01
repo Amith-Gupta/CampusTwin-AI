@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Camera,
   CameraOff,
+  SwitchCamera,
   Upload,
   AlertCircle,
   Activity,
@@ -39,6 +40,11 @@ export const PageLiveVision: React.FC<PageLiveVisionProps> = ({
   const [fps, setFps] = useState<number>(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Mobile Camera & Facing Mode States (Rear Camera "environment" by default)
+  const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
+  const [hasMultipleCameras, setHasMultipleCameras] = useState<boolean>(true);
+  const [isSwitchingCamera, setIsSwitchingCamera] = useState<boolean>(false);
+
   // Confidence & Sensitivity Controls
   const [confidenceThreshold, setConfidenceThreshold] = useState<number>(0.45);
   const [soundAlerts, setSoundAlerts] = useState<boolean>(false);
@@ -74,6 +80,29 @@ export const PageLiveVision: React.FC<PageLiveVisionProps> = ({
   useEffect(() => {
     soundAlertsRef.current = soundAlerts;
   }, [soundAlerts]);
+
+  // Check available videoinput devices to detect if multiple cameras exist
+  const checkAvailableCameras = useCallback(async () => {
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+      return;
+    }
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices.filter((d) => d.kind === 'videoinput');
+      // If 2+ video devices found, or if user-agent is mobile, enable camera switcher
+      const isMobileDevice = /mobile|android|iphone|ipad|tablet/i.test(navigator.userAgent || '');
+      setHasMultipleCameras(videoDevices.length > 1 || isMobileDevice);
+    } catch (err) {
+      console.warn('Could not enumerate cameras:', err);
+      // Fallback: on mobile, assume both front and back cameras exist
+      const isMobileDevice = /mobile|android|iphone|ipad|tablet/i.test(navigator.userAgent || '');
+      setHasMultipleCameras(isMobileDevice);
+    }
+  }, []);
+
+  useEffect(() => {
+    checkAvailableCameras();
+  }, [checkAvailableCameras]);
 
   // Subtle web audio beep for anomaly notification
   const playAlertChime = useCallback(() => {
@@ -290,18 +319,53 @@ export const PageLiveVision: React.FC<PageLiveVisionProps> = ({
     }, delayMs);
   };
 
-  // Start browser webcam
-  const startCamera = async () => {
+  // Start camera stream (defaults to rear camera "environment" on mobile)
+  const startCamera = async (targetFacingMode?: 'environment' | 'user') => {
     setErrorMessage(null);
+    const mode = targetFacingMode || facingMode;
+
+    // 1. Stop any running timers to prevent race conditions or duplicate detection loops
+    if (loopTimerRef.current !== null) {
+      window.clearTimeout(loopTimerRef.current);
+      loopTimerRef.current = null;
+    }
+    isProcessingRef.current = false;
+    setIsProcessing(false);
+
+    // 2. Stop old stream tracks before acquiring new hardware device
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          width: { ideal: 640 },
-          height: { ideal: 480 },
-          frameRate: { ideal: 30 },
-        },
-        audio: false,
-      });
+      let stream: MediaStream;
+      try {
+        // Preferred: Request facingMode ("environment" opens rear camera on phones, falls back to webcam on laptops)
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: mode },
+            width: { ideal: 640 },
+            height: { ideal: 480 },
+            frameRate: { ideal: 30 },
+          },
+          audio: false,
+        });
+      } catch (modeErr) {
+        // Fallback for browsers or devices that reject facingMode constraints
+        console.warn('FacingMode constraint fallback:', modeErr);
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            width: { ideal: 640 },
+            height: { ideal: 480 },
+            frameRate: { ideal: 30 },
+          },
+          audio: false,
+        });
+      }
 
       streamRef.current = stream;
       if (videoRef.current) {
@@ -309,18 +373,81 @@ export const PageLiveVision: React.FC<PageLiveVisionProps> = ({
         await videoRef.current.play();
       }
 
+      // Check track settings to verify which camera was opened
+      const track = stream.getVideoTracks()[0];
+      const settings = track?.getSettings?.();
+      if (settings?.facingMode) {
+        setFacingMode(settings.facingMode as 'environment' | 'user');
+      }
+
       isCameraActiveRef.current = true;
       setIsCameraActive(true);
+
+      // Re-enumerate cameras now that permission has been granted
+      checkAvailableCameras();
 
       if (selectedRoomRef.current) {
         await api.startDetection(selectedRoomRef.current.id, 'live_webcam').catch(() => {});
       }
 
-      // Kick off sequential frame loop after short camera warm-up
+      // Kick off sequential frame loop after short camera warm-up (strictly 1 in-flight frame)
       scheduleLoop(300);
     } catch (err: any) {
       console.error('Camera access denied or failed:', err);
-      setErrorMessage('Could not access laptop webcam. Please grant browser camera permissions or try Video Upload mode.');
+      let friendlyMsg = 'Could not access camera. Please grant browser camera permissions or try Video Upload mode.';
+      if (err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError') {
+        friendlyMsg = 'Camera permission was denied. Please allow camera access in your browser settings.';
+      } else if (err?.name === 'NotFoundError' || err?.name === 'DevicesNotFoundError') {
+        friendlyMsg = 'No camera found on this device.';
+      } else if (err?.name === 'NotReadableError' || err?.name === 'TrackStartError') {
+        friendlyMsg = 'Camera is currently in use by another application or browser tab.';
+      } else if (err?.name === 'OverconstrainedError') {
+        friendlyMsg = 'Requested camera resolution/mode is not supported by your device.';
+      }
+      setErrorMessage(friendlyMsg);
+      setIsCameraActive(false);
+      isCameraActiveRef.current = false;
+    }
+  };
+
+  // Switch between Rear (environment) and Front (user) camera without refreshing
+  const switchCamera = async () => {
+    if (isSwitchingCamera || !isCameraActiveRef.current) return;
+    setIsSwitchingCamera(true);
+    setErrorMessage(null);
+
+    const nextMode: 'environment' | 'user' = facingMode === 'environment' ? 'user' : 'environment';
+    setFacingMode(nextMode);
+
+    try {
+      // 1. Cancel pending timer and reset processing flags
+      if (loopTimerRef.current !== null) {
+        window.clearTimeout(loopTimerRef.current);
+        loopTimerRef.current = null;
+      }
+      isProcessingRef.current = false;
+      setIsProcessing(false);
+
+      // 2. Stop old stream tracks immediately
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+
+      // 3. Small pause to allow mobile camera hardware sensor to release cleanly
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      // 4. Start camera with the new facingMode
+      await startCamera(nextMode);
+    } catch (err) {
+      console.error('Failed to switch camera:', err);
+      setErrorMessage('Failed to switch camera. Attempting to restart active camera.');
+      await startCamera().catch(() => {});
+    } finally {
+      setIsSwitchingCamera(false);
     }
   };
 
@@ -398,7 +525,7 @@ export const PageLiveVision: React.FC<PageLiveVisionProps> = ({
               : 'text-slate-500 hover:text-slate-800'
           }`}
         >
-          <Camera className="w-4 h-4 text-cyan-600" /> Live Laptop Webcam
+          <Camera className="w-4 h-4 text-cyan-600" /> Live Camera & Webcam
         </button>
         <button
           onClick={() => {
@@ -477,7 +604,7 @@ export const PageLiveVision: React.FC<PageLiveVisionProps> = ({
                   <div>
                     <h3 className="text-base font-bold text-white">Camera Standby</h3>
                     <p className="text-xs text-slate-400 mt-1 max-w-sm">
-                      Click &quot;Start Live Camera&quot; to initialize your laptop webcam and stream real-time YOLO person detection.
+                      Click &quot;Start Live Camera&quot; to initialize your camera (rear camera by default on phones) and stream real-time YOLO person detection.
                     </p>
                   </div>
                 </div>
@@ -510,6 +637,11 @@ export const PageLiveVision: React.FC<PageLiveVisionProps> = ({
                       )}
                     </button>
 
+                    <div className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-950/85 text-cyan-300 border border-slate-700 backdrop-blur-md flex items-center gap-1.5">
+                      <Camera className="w-3 h-3 text-cyan-400" />
+                      <span>{facingMode === 'environment' ? 'Rear Camera' : 'Front Camera'}</span>
+                    </div>
+
                     <div className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-950/85 text-slate-300 border border-slate-700 backdrop-blur-md">
                       {latestResult?.model_used || 'YOLOv8n'}
                     </div>
@@ -523,7 +655,7 @@ export const PageLiveVision: React.FC<PageLiveVisionProps> = ({
               <div className="flex items-center gap-3">
                 {!isCameraActive ? (
                   <button
-                    onClick={startCamera}
+                    onClick={() => startCamera()}
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-lg shadow-cyan-600/20 transition cursor-pointer"
                   >
                     <Camera className="w-4 h-4" /> Start Live Camera
@@ -544,6 +676,18 @@ export const PageLiveVision: React.FC<PageLiveVisionProps> = ({
                     title="Download current frame with YOLO annotations as evidence"
                   >
                     <Download className="w-3.5 h-3.5 text-cyan-600" /> Save Evidence
+                  </button>
+                )}
+
+                {isCameraActive && hasMultipleCameras && (
+                  <button
+                    onClick={switchCamera}
+                    disabled={isSwitchingCamera}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 transition cursor-pointer shadow-sm disabled:opacity-50"
+                    title={`Switch to ${facingMode === 'environment' ? 'Front (Selfie)' : 'Rear (Back)'} Camera`}
+                  >
+                    <SwitchCamera className={`w-3.5 h-3.5 text-indigo-600 ${isSwitchingCamera ? 'animate-spin' : ''}`} />
+                    <span>{facingMode === 'environment' ? 'Switch to Front' : 'Switch to Rear'}</span>
                   </button>
                 )}
 
