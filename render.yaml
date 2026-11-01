@@ -6,15 +6,14 @@ services:
     plan: free
     branch: master
     rootDir: backend
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 120 "app:app"
+    buildCommand: pip install --upgrade pip && pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu && pip install --no-cache-dir -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 120 "wsgi:app"
     envVars:
       - key: FLASK_ENV
         value: production
       - key: SECRET_KEY
         generateValue: true
       - key: CORS_ORIGINS
-        value: https://amith-gupta.github.io,http://localhost:5173
+        value: https://amith-gupta.github.io,https://frontend-pied-ten-13.vercel.app,http://localhost:5173
       - key: PYTHON_VERSION
         value: 3.10.11
-

@@ -96,3 +96,15 @@ def create_app(config_class=Config):
         return jsonify({"status": "error", "message": "An internal server error occurred."}), 500
 
     return app
+
+_default_app = None
+
+def __getattr__(name):
+    """Provides fallback for Gunicorn discovery so both app:app and wsgi:app work cleanly."""
+    if name == "app":
+        global _default_app
+        if _default_app is None:
+            _default_app = create_app()
+        return _default_app
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
