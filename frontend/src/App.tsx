@@ -4,9 +4,6 @@ import type { NavTab } from './components/Navbar';
 import { PageOverview } from './components/PageOverview';
 import { PageLiveVision } from './components/PageLiveVision';
 import { PageClassrooms } from './components/PageClassrooms';
-import { PageOccupancyAnalytics } from './components/PageOccupancyAnalytics';
-import { PageAlerts } from './components/PageAlerts';
-import { PageAdminSettings } from './components/PageAdminSettings';
 import type { Room, DashboardSummary, DetectionResult } from './types/campus';
 import { api } from './services/api';
 
@@ -117,24 +114,6 @@ export function App() {
               setSelectedRoom(r);
               setActiveTab('live');
             }}
-          />
-        )}
-
-        {activeTab === 'analytics' && (
-          <PageOccupancyAnalytics
-            rooms={rooms}
-            selectedRoom={selectedRoom}
-            onSelectRoom={setSelectedRoom}
-          />
-        )}
-
-        {activeTab === 'alerts' && <PageAlerts />}
-
-        {activeTab === 'admin' && (
-          <PageAdminSettings
-            onRefreshAll={refreshAllData}
-            onResetSeed={handleResetSeed}
-            isSeeding={isSeeding}
           />
         )}
       </main>

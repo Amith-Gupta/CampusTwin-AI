@@ -3,23 +3,17 @@ import {
   LayoutGrid,
   Camera,
   School,
-  BarChart3,
-  AlertTriangle,
-  Settings,
   Sparkles,
-  RefreshCw,
-  Search,
-  Bell,
-  Radio
+  RefreshCw
 } from 'lucide-react';
 
-export type NavTab = 'overview' | 'live' | 'classrooms' | 'analytics' | 'alerts' | 'admin';
+export type NavTab = 'overview' | 'live' | 'classrooms';
 
 interface NavbarProps {
   activeTab: NavTab;
   onSelectTab: (tab: NavTab) => void;
-  activeAlertsCount: number;
-  isBackendHealthy: boolean;
+  activeAlertsCount?: number;
+  isBackendHealthy?: boolean;
   onResetSeed: () => void;
   isSeeding: boolean;
 }
@@ -35,8 +29,6 @@ interface NavItem {
 export const Navbar: React.FC<NavbarProps> = ({
   activeTab,
   onSelectTab,
-  activeAlertsCount,
-  isBackendHealthy,
   onResetSeed,
   isSeeding,
 }) => {
@@ -44,9 +36,6 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'overview', label: 'Overview', icon: LayoutGrid },
     { id: 'live', label: 'Live Vision', icon: Camera, badge: 'LIVE', badgeType: 'live' },
     { id: 'classrooms', label: 'Classrooms', icon: School },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-    { id: 'alerts', label: 'Alerts', icon: AlertTriangle, badge: activeAlertsCount > 0 ? activeAlertsCount : undefined, badgeType: 'count' },
-    { id: 'admin', label: 'System & ML', icon: Settings },
   ];
 
   return (
@@ -103,51 +92,16 @@ export const Navbar: React.FC<NavbarProps> = ({
           })}
         </nav>
 
-        {/* Right: Status Pill, Controls & User Avatar */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Systems Status Pill */}
-          <div
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold border transition ${
-              isBackendHealthy
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                : 'bg-rose-50 text-rose-700 border-rose-200'
-            }`}
-          >
-            <Radio className={`w-3.5 h-3.5 ${isBackendHealthy ? 'text-emerald-500 animate-pulse' : 'text-rose-500'}`} />
-            <span className="hidden sm:inline">SYSTEMS</span>
-            <span className={isBackendHealthy ? 'text-emerald-600' : 'text-rose-600'}>
-              {isBackendHealthy ? 'Healthy' : 'Connecting'}
-            </span>
-          </div>
-
-          {/* Quick Demo Re-Seed */}
+        {/* Right: Quick Demo Re-Seed */}
+        <div className="flex items-center gap-2">
           <button
             onClick={onResetSeed}
             disabled={isSeeding}
-            title="Reset demo data"
-            className="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-slate-600 flex items-center justify-center transition shadow-sm cursor-pointer disabled:opacity-50"
+            title="Reset demonstration data"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-xs font-bold text-slate-700 transition shadow-sm cursor-pointer disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${isSeeding ? 'animate-spin text-cyan-600' : ''}`} />
-          </button>
-
-          {/* Search Icon Button */}
-          <button
-            title="Search campus"
-            className="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-slate-600 flex items-center justify-center transition shadow-sm cursor-pointer"
-          >
-            <Search className="w-3.5 h-3.5 text-slate-500" />
-          </button>
-
-          {/* Bell Notifications */}
-          <button
-            onClick={() => onSelectTab('alerts')}
-            title="Notifications"
-            className="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-slate-600 flex items-center justify-center transition shadow-sm relative cursor-pointer"
-          >
-            <Bell className="w-3.5 h-3.5 text-slate-500" />
-            {activeAlertsCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500" />
-            )}
+            <span className="hidden sm:inline">Reset Demo</span>
           </button>
         </div>
       </div>

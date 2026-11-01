@@ -2,15 +2,13 @@ import React from 'react';
 import {
   Users,
   School,
-  AlertTriangle,
   TrendingUp,
   Activity,
   Maximize2,
   Sparkles,
   Camera,
   Cpu,
-  HardDrive,
-  ChevronDown
+  HardDrive
 } from 'lucide-react';
 import {
   AreaChart,
@@ -66,24 +64,10 @@ export const PageOverview: React.FC<PageOverviewProps> = ({
             Real-time vision tracking and AI occupancy monitoring across campus zones.
           </p>
         </div>
-
-        {/* Quick Action Filter Pills */}
-        <div className="flex items-center gap-2">
-          <button className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white/90 hover:bg-white text-slate-700 border border-white/80 shadow-[0_4px_16px_rgba(15,23,42,0.04)] transition cursor-pointer">
-            <Activity className="w-3.5 h-3.5 text-cyan-600" />
-            <span>Live data</span>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-          </button>
-
-          <button className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white/90 hover:bg-white text-slate-700 border border-white/80 shadow-[0_4px_16px_rgba(15,23,42,0.04)] transition cursor-pointer">
-            <Cpu className="w-3.5 h-3.5 text-purple-600" />
-            <span>Edge cluster 01</span>
-          </button>
-        </div>
       </div>
 
-      {/* Top 4 KPI Cards Grid (Figma Design 1:1) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Top 3 KPI Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Card 1: CAMPUS OCCUPANCY */}
         <div className="p-5 rounded-3xl bg-white/90 backdrop-blur-md border border-white/80 shadow-[0_10px_30px_rgba(15,23,42,0.04)] hover:shadow-[0_15px_35px_rgba(15,23,42,0.07)] transition-all">
           <div className="flex items-center justify-between mb-3">
@@ -176,32 +160,6 @@ export const PageOverview: React.FC<PageOverviewProps> = ({
 
           <div className="mt-3 pt-3 border-t border-slate-100 text-[11px] text-slate-500 font-medium">
             <span className="font-bold text-slate-800">{kpis.total_classrooms}</span> AI Vision streams synchronized
-          </div>
-        </div>
-
-        {/* Card 4: ACTIVE ANOMALIES */}
-        <div className="p-5 rounded-3xl bg-white/90 backdrop-blur-md border border-white/80 shadow-[0_10px_30px_rgba(15,23,42,0.04)] hover:shadow-[0_15px_35px_rgba(15,23,42,0.07)] transition-all">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-9 h-9 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-500 shadow-sm">
-              <AlertTriangle className="w-4 h-4" />
-            </div>
-            <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-600 border border-rose-100">
-              Needs Review
-            </span>
-          </div>
-
-          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 block mb-1">
-            Active Anomalies
-          </span>
-
-          <div className="text-3xl font-black text-slate-900 tracking-tight">
-            {kpis.active_alerts_count} <span className="text-sm font-semibold text-slate-400">incidents</span>
-          </div>
-
-          <div className="mt-3 pt-3 border-t border-slate-100 text-[11px] text-slate-500 font-medium flex items-center gap-2">
-            <span className="text-rose-600 font-bold">1 critical</span> •{' '}
-            <span className="text-amber-600 font-bold">2 high</span> •{' '}
-            <span className="text-blue-600 font-bold">1 medium</span>
           </div>
         </div>
       </div>
