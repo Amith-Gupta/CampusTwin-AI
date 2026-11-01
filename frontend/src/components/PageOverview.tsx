@@ -60,10 +60,10 @@ export const PageOverview: React.FC<PageOverviewProps> = ({
             <span>—</span> CAMPUS COMMAND CENTER
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            Good morning, Dr. Chen.
+            Campus Intelligence Overview
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5 font-medium">
-            Your campus is operating within normal parameters.
+            Real-time vision tracking and AI occupancy monitoring across campus zones.
           </p>
         </div>
 

@@ -149,14 +149,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500" />
             )}
           </button>
-
-          {/* User Avatar (Dr. Chen - DC) */}
-          <div
-            title="Dr. Chen (Campus Admin)"
-            className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-black text-xs flex items-center justify-center shadow-md shadow-blue-500/20 ring-2 ring-white cursor-pointer select-none"
-          >
-            DC
-          </div>
         </div>
       </div>
 
