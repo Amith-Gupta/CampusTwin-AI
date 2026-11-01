@@ -130,6 +130,9 @@ class Alert(Base):
     id = Column(Integer, primary_key=True, index=True)
     room_id = Column(Integer, ForeignKey("rooms.id", ondelete="CASCADE"), nullable=False, index=True)
     alert_type = Column(String(50), nullable=False)  # overcapacity, out_of_hours_occupancy, energy_spike, sudden_crowd_change
+    mechanism = Column(String(50), nullable=False, default="rule_based")  # rule_based, ml_based, hybrid
+    technical_reason = Column(Text, nullable=True)
+    anomaly_score = Column(Float, nullable=True)
     severity = Column(String(20), nullable=False, default="medium")  # info, low, medium, high, critical
     description = Column(Text, nullable=False)
     observed_value = Column(Float, nullable=True)
@@ -145,6 +148,9 @@ class Alert(Base):
             "room_id": self.room_id,
             "room_name": f"{self.room.building} - {self.room.room_number}" if self.room else "Unknown Room",
             "alert_type": self.alert_type,
+            "mechanism": self.mechanism or "rule_based",
+            "technical_reason": self.technical_reason,
+            "anomaly_score": self.anomaly_score,
             "severity": self.severity,
             "description": self.description,
             "observed_value": self.observed_value,

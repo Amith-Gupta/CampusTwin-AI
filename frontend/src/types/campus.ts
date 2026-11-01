@@ -55,6 +55,9 @@ export interface Alert {
   room_id: number;
   room_name: string;
   alert_type: string;
+  mechanism?: 'rule_based' | 'ml_based' | 'hybrid';
+  technical_reason?: string;
+  anomaly_score?: number | null;
   severity: 'info' | 'low' | 'medium' | 'high' | 'critical';
   description: string;
   observed_value: number | null;
@@ -98,10 +101,14 @@ export interface PersonDetectionItem {
 export interface DetectionResult {
   status: string;
   person_count: number;
+  detected_people_frame?: number;
+  active_track_ids?: number[];
+  cumulative_unique_tracks?: number;
   confidence_avg: number;
   detections: PersonDetectionItem[];
   model_used: string;
   is_fallback: boolean;
+  stream_id?: string;
   annotated_frame?: string;
   room_id?: number;
   occupancy_percentage?: number;
@@ -115,6 +122,10 @@ export interface ForecastPrediction {
   predicted_occupancy_pct: number;
   lower_bound: number;
   upper_bound: number;
+  target_coverage?: number;
+  measured_test_coverage?: number | null;
+  calibration_status?: string;
+  clipping_applied?: boolean;
 }
 
 export interface ForecastResponse {
@@ -129,7 +140,18 @@ export interface ForecastResponse {
     rmse?: number;
     r2_score?: number;
     training_samples?: number;
+    calibration_samples?: number;
     test_samples?: number;
+    target_coverage?: number;
+    measured_test_coverage?: number | null;
+    calibration_margin?: number;
+    is_rf_superior?: boolean;
+    data_origin?: string;
+    baselines?: {
+      persistence: { mae: number; rmse: number; r2_score: number };
+      seasonal: { mae: number; rmse: number; r2_score: number };
+    };
+    horizon_breakdown?: Record<string, { mae: number; rmse: number }>;
   };
   forecast: ForecastPrediction[];
 }

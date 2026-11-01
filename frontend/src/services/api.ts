@@ -13,8 +13,11 @@ import type {
   EnergyReading
 } from '../types/campus';
 
+const apiBase = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+const baseURL = apiBase ? `${apiBase}/api` : '/api';
+
 const apiClient = axios.create({
-  baseURL: '/api',
+  baseURL,
   timeout: 45000,
   headers: {
     'Content-Type': 'application/json',
@@ -25,6 +28,10 @@ export const api = {
   // Health & System
   getHealth: async () => (await apiClient.get('/health')).data,
   getSystemStatus: async (): Promise<SystemStatusResponse> => (await apiClient.get('/system/status')).data,
+
+  // Benchmarks (CV & Anomaly)
+  getCVBenchmark: async () => (await apiClient.get('/detection/benchmark')).data,
+  getAnomalyBenchmark: async () => (await apiClient.get('/alerts/benchmark')).data,
 
   // Dashboard
   getDashboardSummary: async (): Promise<DashboardSummary> => (await apiClient.get('/dashboard/summary')).data,

@@ -629,7 +629,13 @@ export const PageLiveVision: React.FC<PageLiveVisionProps> = ({
                 </div>
                 <div className="flex items-center justify-between py-1.5 border-b border-slate-100">
                   <span className="text-slate-500">Centroid Tracker</span>
-                  <span className="font-extrabold text-purple-600">Active (Euclidean)</span>
+                  <span className="font-extrabold text-purple-600">Isolated per Room</span>
+                </div>
+                <div className="flex items-center justify-between py-1.5 border-b border-slate-100">
+                  <span className="text-slate-500">Cumulative Unique Tracks</span>
+                  <span className="font-extrabold text-indigo-700">
+                    {latestResult?.cumulative_unique_tracks || 0} unique IDs
+                  </span>
                 </div>
                 <div className="flex items-center justify-between py-1.5">
                   <span className="text-slate-500">Privacy Safeguard</span>

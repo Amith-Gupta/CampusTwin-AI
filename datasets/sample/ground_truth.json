@@ -1,0 +1,14 @@
+[
+  {
+    "filename": "classroom_students.jpg",
+    "ground_truth_count": 8,
+    "description": "Lecture room with seated students",
+    "is_real_photo": true
+  },
+  {
+    "filename": "empty_room.jpg",
+    "ground_truth_count": 0,
+    "description": "Empty classroom with chairs and desks only",
+    "is_real_photo": false
+  }
+]

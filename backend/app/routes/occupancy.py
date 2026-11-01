@@ -101,10 +101,10 @@ def train_forecasting_model():
         Room.capacity
     ).join(Room, OccupancyReading.room_id == Room.id).all()
 
-    if len(records) < 20:
+    if len(records) < 30:
         return jsonify({
             "status": "error",
-            "message": f"Insufficient training data. Found {len(records)} readings; minimum 20 required. Please seed demo data first."
+            "message": f"Insufficient training data. Found {len(records)} readings; minimum 30 required for chronological split & interval calibration. Please seed demo data first."
         }), 400
 
     df = pd.DataFrame([{

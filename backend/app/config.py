@@ -14,9 +14,16 @@ class Config:
     PORT = int(os.getenv("PORT", 5000))
     DEBUG = os.getenv("FLASK_ENV") == "development"
 
-    # Database
+    # Database (PostgreSQL or SQLite with persistent disk fallback)
+    raw_db_url = os.getenv("DATABASE_URL")
     DATABASE_PATH = BASE_DIR / "campustwin.db"
-    DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DATABASE_PATH}")
+    if raw_db_url:
+        if raw_db_url.startswith("postgres://"):
+            DATABASE_URL = raw_db_url.replace("postgres://", "postgresql://", 1)
+        else:
+            DATABASE_URL = raw_db_url
+    else:
+        DATABASE_URL = f"sqlite:///{DATABASE_PATH}"
 
     # Storage paths
     UPLOAD_FOLDER = BASE_DIR / "uploads"

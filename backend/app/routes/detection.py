@@ -48,8 +48,22 @@ def detection_status():
             "model_name": active_detection_session["model_name"],
             "is_loaded": detector.is_loaded,
             "conf_threshold": detector.conf_threshold,
-            "target_class": "person (id: 0)"
+            "target_class": "person (id: 0)",
+            "active_isolated_trackers": len(detector.trackers)
         }
+    }), 200
+
+@detection_bp.route("/detection/benchmark", methods=["GET"])
+def run_cv_benchmark():
+    """
+    Executes repeatable CV benchmark on labeled sample dataset.
+    Measures wall-clock hardware FPS, person-count MAE, precision, and recall.
+    """
+    detector = get_detector()
+    benchmark_res = detector.evaluate_benchmark()
+    return jsonify({
+        "status": "success",
+        "benchmark": benchmark_res
     }), 200
 
 @detection_bp.route("/detection/start", methods=["POST"])
@@ -119,7 +133,13 @@ def process_live_frame():
             return jsonify({"status": "error", "message": "Could not decode image frame."}), 400
 
         detector = get_detector()
-        result = detector.detect_image(frame, draw_boxes=True, conf_threshold=conf_threshold)
+        stream_id = f"room_{room_id}" if room_id else "webcam_default"
+        result = detector.detect_image(
+            frame,
+            draw_boxes=True,
+            conf_threshold=conf_threshold,
+            stream_id=stream_id
+        )
 
         active_detection_session["frames_processed"] += 1
         active_detection_session["last_person_count"] = result.person_count
@@ -173,6 +193,9 @@ def process_live_frame():
                                 new_alert = Alert(
                                     room_id=room_obj.id,
                                     alert_type=anomaly["alert_type"],
+                                    mechanism=anomaly.get("mechanism", "rule_based"),
+                                    technical_reason=anomaly.get("technical_reason"),
+                                    anomaly_score=anomaly.get("anomaly_score"),
                                     severity=anomaly["severity"],
                                     description=anomaly["description"],
                                     observed_value=anomaly["observed_value"],
@@ -200,10 +223,14 @@ def process_live_frame():
         return jsonify({
             "status": "success",
             "person_count": result.person_count,
+            "detected_people_frame": result.person_count,
+            "active_track_ids": result.active_track_ids,
+            "cumulative_unique_tracks": result.cumulative_unique_tracks,
             "confidence_avg": result.confidence_avg,
             "detections": result.detections,
             "model_used": result.model_used,
             "is_fallback": result.is_fallback,
+            "stream_id": result.stream_id,
             "annotated_frame": annotated_b64,
             "room_id": room_id,
             "occupancy_percentage": round((result.person_count / room_capacity * 100.0), 1) if room_capacity > 0 else 0.0,

@@ -188,6 +188,15 @@ export const PageAlerts: React.FC = () => {
                       <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider border ${getSeverityBadge(alert.severity)}`}>
                         {alert.severity}
                       </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        alert.mechanism === 'hybrid'
+                          ? 'bg-purple-50 text-purple-700 border border-purple-200'
+                          : alert.mechanism === 'ml_based'
+                          ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                          : 'bg-slate-100 text-slate-700 border border-slate-200'
+                      }`}>
+                        {alert.mechanism ? alert.mechanism.replace('_', ' ') : 'rule based'}
+                      </span>
                       <span className="text-sm font-bold text-slate-900">
                         {alert.room_name}
                       </span>
@@ -199,6 +208,12 @@ export const PageAlerts: React.FC = () => {
                     <p className="text-xs text-slate-700 font-medium">
                       {alert.description}
                     </p>
+
+                    {alert.technical_reason && (
+                      <p className="text-[11px] text-slate-500 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                        <strong className="text-slate-700">Engineering Diagnosis:</strong> {alert.technical_reason}
+                      </p>
+                    )}
 
                     <div className="flex flex-wrap items-center gap-4 text-[11px] text-slate-500 pt-1">
                       {alert.observed_value !== null && (

@@ -67,6 +67,17 @@ def get_anomalies():
         "recent_anomalies": [a.to_dict() for a in alerts[:10]]
     }), 200
 
+@alerts_bp.route("/alerts/benchmark", methods=["GET"])
+def run_anomaly_benchmark():
+    """Runs repeatability benchmark on labeled anomaly test cases."""
+    from app.ml.anomaly_detector import AnomalyDetector
+    detector = AnomalyDetector()
+    results = detector.evaluate_benchmark()
+    return jsonify({
+        "status": "success",
+        "benchmark": results
+    }), 200
+
 @alerts_bp.route("/recommendations", methods=["GET"])
 def get_recommendations():
     """Generates rule-based smart recommendations derived from live database metrics."""
